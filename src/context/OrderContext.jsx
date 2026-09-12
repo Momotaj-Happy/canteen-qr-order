@@ -92,9 +92,11 @@ export const CANTEEN_MENU_CATALOG = [
 
 export const OrderProvider = ({ children }) => {
   const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error reading localStorage:', e);
     }
     return [
       {
@@ -121,45 +123,60 @@ export const OrderProvider = ({ children }) => {
   const [tokenCounter, setTokenCounter] = useState(42);
 
   const broadcastSync = (action, payload) => {
-    if ('BroadcastChannel' in window) {
-      const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-      channel.postMessage({ action, payload, time: Date.now() });
-      channel.close();
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+        channel.postMessage({ action, payload, time: Date.now() });
+        channel.close();
+      }
+    } catch (e) {
+      console.warn('BroadcastChannel sync notice:', e);
     }
   };
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    } catch (e) {
+      console.error('Error saving to localStorage:', e);
+    }
   }, [orders]);
 
   useEffect(() => {
-    if (!('BroadcastChannel' in window)) return;
-    const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    let channel;
+    try {
+      channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
 
-    channel.onmessage = (event) => {
-      const { action, payload } = event.data;
-      if (action === 'NEW_ORDER') {
-        setOrders((prev) => [payload, ...prev]);
-        playKitchenChimeSound();
-        setLastChimeOrder(payload);
-      } else if (action === 'UPDATE_STATUS') {
-        setOrders((prev) =>
-          prev.map((ord) => (ord.id === payload.id ? { ...ord, status: payload.status } : ord))
-        );
-        if (currentActiveOrder && currentActiveOrder.id === payload.id) {
-          setCurrentActiveOrder((prev) => ({ ...prev, status: payload.status }));
+      channel.onmessage = (event) => {
+        const { action, payload } = event.data;
+        if (action === 'NEW_ORDER') {
+          setOrders((prev) => [payload, ...prev]);
+          playKitchenChimeSound();
+          setLastChimeOrder(payload);
+        } else if (action === 'UPDATE_STATUS') {
+          setOrders((prev) =>
+            prev.map((ord) => (ord.id === payload.id ? { ...ord, status: payload.status } : ord))
+          );
+          if (currentActiveOrder && currentActiveOrder.id === payload.id) {
+            setCurrentActiveOrder((prev) => ({ ...prev, status: payload.status }));
+          }
+        } else if (action === 'FULFILL_ORDER') {
+          setOrders((prev) =>
+            prev.map((ord) => (ord.id === payload.id ? { ...ord, status: 'Fulfilled', fulfilledAt: new Date().toISOString() } : ord))
+          );
+          if (currentActiveOrder && currentActiveOrder.id === payload.id) {
+            setCurrentActiveOrder((prev) => ({ ...prev, status: 'Fulfilled' }));
+          }
         }
-      } else if (action === 'FULFILL_ORDER') {
-        setOrders((prev) =>
-          prev.map((ord) => (ord.id === payload.id ? { ...ord, status: 'Fulfilled', fulfilledAt: new Date().toISOString() } : ord))
-        );
-        if (currentActiveOrder && currentActiveOrder.id === payload.id) {
-          setCurrentActiveOrder((prev) => ({ ...prev, status: 'Fulfilled' }));
-        }
-      }
+      };
+    } catch (e) {
+      console.warn('BroadcastChannel listener initialization notice:', e);
+    }
+
+    return () => {
+      if (channel) channel.close();
     };
-
-    return () => channel.close();
   }, [currentActiveOrder]);
 
   const addToCart = (item) => {
@@ -269,4 +286,4 @@ export const OrderProvider = ({ children }) => {
 };
 
 export const useOrderSystem = () => useContext(OrderContext);
-export const useOrder = useOrderSystem; // Alias for backward compatibility
+export const useOrder = useOrderSystem;
