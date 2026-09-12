@@ -1,5 +1,5 @@
 // Web Audio API Synthesizer Chime for Instant Kitchen Notification
-export const playKitchenChime = () => {
+export const playKitchenChimeSound = () => {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
@@ -14,7 +14,7 @@ export const playKitchenChime = () => {
       osc.frequency.setValueAtTime(freq, startTime);
 
       // Smooth envelope decay
-      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.setValueAtTime(0.35, startTime);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
       osc.connect(gain);

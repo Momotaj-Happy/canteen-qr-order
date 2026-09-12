@@ -1,10 +1,10 @@
 import React from 'react';
 import { CheckCircle2, Clock, Utensils, QrCode, Sparkles, ArrowLeft, AlertCircle, Banknote } from 'lucide-react';
-import { QRCodeDisplay } from '../utils/qrGenerator';
-import { useOrder } from '../context/OrderContext';
+import { QRCodeRenderer } from '../utils/qrCodeRenderer';
+import { useOrderSystem } from '../context/OrderContext';
 
-export const ReceiptCard = ({ order, onNewOrder }) => {
-  const { setCurrentActiveOrder } = useOrder();
+export const DigitalReceiptToken = ({ order, onNewOrder }) => {
+  const { setCurrentActiveOrder } = useOrderSystem();
 
   if (!order) return null;
 
@@ -16,7 +16,7 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
           badgeClass: 'badge-pending',
           icon: Clock,
           color: 'text-amber-400',
-          desc: 'Cook is reviewing your order details.'
+          desc: 'Kitchen cook is reviewing your order details.'
         };
       case 'Preparing':
         return {
@@ -56,7 +56,6 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
   const statusInfo = getStatusDetails(order.status);
   const StatusIcon = statusInfo.icon;
 
-  // JSON String payload for Staff QR Scanner
   const qrPayload = JSON.stringify({
     orderId: order.id,
     token: order.tokenNumber,
@@ -67,7 +66,7 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
   return (
     <div className="max-w-md mx-auto py-6 px-4 animate-in fade-in zoom-in duration-300">
       
-      {/* Top Lock Badge */}
+      {/* Navigation Header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setCurrentActiveOrder(null)}
@@ -76,26 +75,24 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
           <ArrowLeft className="w-4 h-4" /> Back to Menu
         </button>
         <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-400" /> Digital Receipt Card
+          <Sparkles className="w-3 h-3 text-amber-400" /> Step 2: Digital Receipt Token
         </span>
       </div>
 
-      {/* Main Lock Card */}
+      {/* Main Digital Token Card */}
       <div className="glass-panel p-6 border-emerald-500/30 relative overflow-hidden shadow-2xl">
         
-        {/* Subtle background glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Token Header */}
         <div className="text-center pb-5 border-b border-slate-800">
           <p className="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">
-            {order.tableNumber} • Order Token
+            {order.tableNumber} • Token Number
           </p>
           <h2 className="text-5xl font-extrabold text-white font-heading tracking-tight text-emerald-400 drop-shadow-md">
             {order.tokenNumber}
           </h2>
           
-          {/* Status Badge */}
           <div className="mt-3 flex items-center justify-center gap-2">
             <span className={`badge ${statusInfo.badgeClass}`}>
               <StatusIcon className="w-3.5 h-3.5" />
@@ -105,20 +102,20 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
           <p className="text-xs text-slate-400 mt-1.5">{statusInfo.desc}</p>
         </div>
 
-        {/* Generated Customer QR Code Section */}
+        {/* Customer QR Code */}
         <div className="py-6 text-center bg-slate-950/60 my-5 rounded-2xl border border-slate-800/80 p-4">
           <p className="text-xs text-slate-400 mb-3 flex items-center justify-center gap-1.5 font-medium">
-            <QrCode className="w-4 h-4 text-emerald-400" /> Show this QR code at Counter
+            <QrCode className="w-4 h-4 text-emerald-400" /> Customer QR Code for Counter Verification
           </p>
           
-          <QRCodeDisplay value={qrPayload} size={190} />
+          <QRCodeRenderer value={qrPayload} size={190} />
 
           <p className="text-[11px] text-slate-400 mt-3">
             Employee will scan code to collect <strong className="text-emerald-400">৳{order.totalAmount} Cash</strong>
           </p>
         </div>
 
-        {/* Amount Due & Items Breakdown */}
+        {/* Amount Due Breakdown */}
         <div className="space-y-4">
           <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -137,9 +134,8 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
             </div>
           </div>
 
-          {/* Ordered Item List Summary */}
           <div className="space-y-2 bg-slate-900/60 rounded-xl p-3 border border-slate-800">
-            <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Order Items</p>
+            <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Ordered Items</p>
             {order.items.map((item) => (
               <div key={item.id} className="flex justify-between items-center text-xs py-1 border-b border-slate-800/50 last:border-0">
                 <span className="text-slate-300 font-medium">
@@ -175,3 +171,5 @@ export const ReceiptCard = ({ order, onNewOrder }) => {
     </div>
   );
 };
+
+export default DigitalReceiptToken;

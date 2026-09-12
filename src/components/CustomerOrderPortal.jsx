@@ -1,31 +1,29 @@
 import React, { useState } from 'react';
-import { Search, Plus, Minus, Flame, Sparkles, ShoppingBag, X, Check, ArrowRight } from 'lucide-react';
-import { useOrder, MENU_ITEMS } from '../context/OrderContext';
-import { ReceiptCard } from './ReceiptCard';
+import { Search, Plus, Minus, Flame, Sparkles, ShoppingBag, X, ArrowRight } from 'lucide-react';
+import { useOrderSystem, CANTEEN_MENU_CATALOG } from '../context/OrderContext';
+import { DigitalReceiptToken } from './DigitalReceiptToken';
 
-export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
+export const CustomerOrderPortal = ({ isCartOpen, setIsCartOpen }) => {
   const {
     cart,
     addToCart,
     updateQuantity,
-    removeFromCart,
     tableNumber,
     setTableNumber,
     placeOrder,
     currentActiveOrder
-  } = useOrder();
+  } = useOrderSystem();
 
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // If customer has placed an active order, lock onto ReceiptCard (Step 2)
   if (currentActiveOrder) {
-    return <ReceiptCard order={currentActiveOrder} onNewOrder={() => setIsCartOpen(false)} />;
+    return <DigitalReceiptToken order={currentActiveOrder} onNewOrder={() => setIsCartOpen(false)} />;
   }
 
   const categories = ['All', 'Meals', 'Snacks', 'Beverages', 'Desserts'];
 
-  const filteredItems = MENU_ITEMS.filter((item) => {
+  const filteredItems = CANTEEN_MENU_CATALOG.filter((item) => {
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -60,7 +58,9 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
               <option value="Takeaway Counter">Takeaway Counter</option>
             </select>
           </div>
-          <h2 className="text-2xl font-extrabold text-white font-heading mt-1">Canteen Fresh Menu</h2>
+          <h2 className="text-2xl font-extrabold text-white font-heading mt-1">
+            Step 1: Canteen Scan & Order Portal
+          </h2>
         </div>
 
         {/* Search Bar */}
@@ -93,7 +93,7 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
         ))}
       </div>
 
-      {/* Food Items Grid */}
+      {/* Food Catalog Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {filteredItems.map((item) => {
           const qty = getItemQuantityInCart(item.id);
@@ -104,7 +104,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
               className="glass-panel group overflow-hidden border-slate-800 hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                {/* Image & Badges */}
                 <div className="relative h-44 overflow-hidden bg-slate-900">
                   <img
                     src={item.image}
@@ -113,7 +112,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
 
-                  {/* Badge Pills */}
                   <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
                     {item.badge && (
                       <span className="bg-emerald-500 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md">
@@ -128,20 +126,16 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
                   </div>
                 </div>
 
-                {/* Content */}
                 <div className="p-4">
-                  <div className="flex justify-between items-start gap-2 mb-1">
-                    <h3 className="font-bold text-white text-base font-heading group-hover:text-emerald-400 transition-colors">
-                      {item.name}
-                    </h3>
-                  </div>
+                  <h3 className="font-bold text-white text-base font-heading group-hover:text-emerald-400 transition-colors">
+                    {item.name}
+                  </h3>
                   <p className="text-xs text-slate-400 line-clamp-2 mb-3 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
               </div>
 
-              {/* Price & Quantity Controls */}
               <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-800/60 mt-2">
                 <div>
                   <span className="text-xs text-slate-400">Price</span>
@@ -180,7 +174,7 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
         })}
       </div>
 
-      {/* Floating Mobile Cart Bar */}
+      {/* Floating Cart Bar */}
       {cartCount > 0 && !isCartOpen && (
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto animate-in slide-in-from-bottom duration-300">
           <button
@@ -207,8 +201,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-slate-900 border-l border-slate-800 h-full flex flex-col justify-between p-6 shadow-2xl overflow-y-auto">
-            
-            {/* Drawer Header */}
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-2">
@@ -223,7 +215,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
                 </button>
               </div>
 
-              {/* Items List */}
               <div className="py-4 space-y-3">
                 {cart.length === 0 ? (
                   <p className="text-xs text-slate-400 text-center py-10">Your cart is currently empty.</p>
@@ -248,7 +239,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
               </div>
             </div>
 
-            {/* Drawer Footer & Place Order Trigger */}
             {cart.length > 0 && (
               <div className="pt-4 border-t border-slate-800 space-y-4">
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
@@ -281,7 +271,6 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
                 </button>
               </div>
             )}
-
           </div>
         </div>
       )}
@@ -289,3 +278,5 @@ export const CustomerMenu = ({ isCartOpen, setIsCartOpen }) => {
     </div>
   );
 };
+
+export default CustomerOrderPortal;
