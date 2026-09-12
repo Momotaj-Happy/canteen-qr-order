@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { playKitchenChime } from '../utils/soundEffects';
+import { playKitchenChimeSound } from '../utils/audioChimeSynthesizer';
 
 const OrderContext = createContext();
 
 const SYNC_CHANNEL_NAME = 'canteen_qr_orders_channel';
 const STORAGE_KEY = 'canteen_qr_orders_state';
 
-// Initial Mock Food Menu with BDT Prices
-export const MENU_ITEMS = [
+// Canteen Menu Catalog with BDT Currency Pricing
+export const CANTEEN_MENU_CATALOG = [
   {
     id: 'm1',
     name: 'Special Kacchi Biryani',
@@ -96,18 +96,17 @@ export const OrderProvider = ({ children }) => {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    // Default seed order for demo
     return [
       {
         id: 'ord-1001',
         tokenNumber: '#041',
         tableNumber: 'Table 04',
         items: [
-          { ...MENU_ITEMS[0], quantity: 1 },
-          { ...MENU_ITEMS[6], quantity: 2 }
+          { ...CANTEEN_MENU_CATALOG[0], quantity: 1 },
+          { ...CANTEEN_MENU_CATALOG[6], quantity: 2 }
         ],
         totalAmount: 320,
-        status: 'Fulfilled', // Pending, Preparing, Ready, Fulfilled
+        status: 'Fulfilled',
         createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
         fulfilledAt: new Date(Date.now() - 2 * 60000).toISOString(),
         paymentMethod: 'Cash'
@@ -121,7 +120,6 @@ export const OrderProvider = ({ children }) => {
   const [lastChimeOrder, setLastChimeOrder] = useState(null);
   const [tokenCounter, setTokenCounter] = useState(42);
 
-  // Sync state across localStorage and BroadcastChannel
   const broadcastSync = (action, payload) => {
     if ('BroadcastChannel' in window) {
       const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
@@ -142,7 +140,7 @@ export const OrderProvider = ({ children }) => {
       const { action, payload } = event.data;
       if (action === 'NEW_ORDER') {
         setOrders((prev) => [payload, ...prev]);
-        playKitchenChime();
+        playKitchenChimeSound();
         setLastChimeOrder(payload);
       } else if (action === 'UPDATE_STATUS') {
         setOrders((prev) =>
@@ -164,7 +162,6 @@ export const OrderProvider = ({ children }) => {
     return () => channel.close();
   }, [currentActiveOrder]);
 
-  // Cart operations
   const addToCart = (item) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
@@ -195,7 +192,6 @@ export const OrderProvider = ({ children }) => {
 
   const clearCart = () => setCart([]);
 
-  // Place Order (Step 1 -> Step 2)
   const placeOrder = () => {
     if (cart.length === 0) return null;
 
@@ -210,7 +206,7 @@ export const OrderProvider = ({ children }) => {
       tableNumber: tableNumber,
       items: [...cart],
       totalAmount: total,
-      status: 'Pending', // Step 2: Instant Token Generation
+      status: 'Pending',
       createdAt: new Date().toISOString(),
       paymentMethod: 'Cash'
     };
@@ -219,15 +215,13 @@ export const OrderProvider = ({ children }) => {
     setCurrentActiveOrder(newOrder);
     clearCart();
 
-    // Trigger instant chime & broadcast to kitchen/counter
-    playKitchenChime();
+    playKitchenChimeSound();
     setLastChimeOrder(newOrder);
     broadcastSync('NEW_ORDER', newOrder);
 
     return newOrder;
   };
 
-  // Kitchen Status Update
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders((prev) =>
       prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord))
@@ -238,7 +232,6 @@ export const OrderProvider = ({ children }) => {
     broadcastSync('UPDATE_STATUS', { id: orderId, status: newStatus });
   };
 
-  // Staff Counter Fulfill (Step 3: Scan, Pay & Collect)
   const fulfillOrder = (orderId) => {
     const fulfilledTime = new Date().toISOString();
     setOrders((prev) =>
@@ -267,7 +260,7 @@ export const OrderProvider = ({ children }) => {
         updateOrderStatus,
         fulfillOrder,
         lastChimeOrder,
-        triggerChime: playKitchenChime
+        triggerChime: playKitchenChimeSound
       }}
     >
       {children}
@@ -275,4 +268,5 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-export const useOrder = () => useContext(OrderContext);
+export const useOrderSystem = () => useContext(OrderContext);
+export const useOrder = useOrderSystem; // Alias for backward compatibility

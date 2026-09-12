@@ -1,9 +1,9 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export const QRCodeDisplay = ({ value, size = 180, level = "H", className = "" }) => {
+export const QRCodeRenderer = ({ value, size = 190, level = "H", className = "" }) => {
   return (
-    <div className={`qr-code-wrapper ${className}`} style={{ background: '#ffffff', padding: '12px', borderRadius: '14px', display: 'inline-block', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
+    <div className={`qr-code-container ${className}`} style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', display: 'inline-block', boxShadow: '0 10px 30px rgba(0,0,0,0.35)' }}>
       <QRCodeSVG
         value={value}
         size={size}

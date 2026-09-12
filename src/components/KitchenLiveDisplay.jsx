@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ChefHat, Volume2, Clock, CheckCircle2, Utensils, Bell, Sparkles, Filter } from 'lucide-react';
-import { useOrder } from '../context/OrderContext';
+import { ChefHat, Volume2, Clock, CheckCircle2, Utensils, Bell, Sparkles } from 'lucide-react';
+import { useOrderSystem } from '../context/OrderContext';
 
-export const KitchenDashboard = () => {
-  const { orders, updateOrderStatus, triggerChime } = useOrder();
+export const KitchenLiveDisplay = () => {
+  const { orders, updateOrderStatus, triggerChime } = useOrderSystem();
   const [filterStatus, setFilterStatus] = useState('Active');
 
   const activeOrders = orders.filter((o) => {
@@ -34,10 +34,12 @@ export const KitchenDashboard = () => {
             <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
               <ChefHat className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white font-heading">Kitchen Live Orders Stream</h2>
+            <h2 className="text-2xl font-extrabold text-white font-heading">
+              Step 2: Kitchen Live Display & Order Stream
+            </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Audio chime sounds instantly on new customer order. Update ticket statuses in real-time.
+            Synthesizer audio chime sounds instantly on new customer order. Update kitchen ticket statuses in real-time.
           </p>
         </div>
 
@@ -90,7 +92,6 @@ export const KitchenDashboard = () => {
                     : 'border-slate-800'
                 }`}
               >
-                {/* Status Indicator top strip */}
                 <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-800">
                   <div>
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
@@ -112,7 +113,6 @@ export const KitchenDashboard = () => {
                   </div>
                 </div>
 
-                {/* Items List Breakdown */}
                 <div className="space-y-2 mb-6 min-h-[100px]">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordered Items</p>
                   {order.items.map((item, idx) => (
@@ -125,7 +125,6 @@ export const KitchenDashboard = () => {
                   ))}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="pt-3 border-t border-slate-800/80 flex items-center gap-2">
                   {order.status === 'Pending' && (
                     <button
@@ -166,3 +165,5 @@ export const KitchenDashboard = () => {
     </div>
   );
 };
+
+export default KitchenLiveDisplay;

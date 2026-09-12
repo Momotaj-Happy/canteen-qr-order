@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
-import { QrCode, Camera, CheckCircle2, Banknote, Search, Sparkles, RefreshCw, AlertCircle, ShoppingBag, Utensils } from 'lucide-react';
-import { useOrder } from '../context/OrderContext';
+import { QrCode, Camera, CheckCircle2, Banknote, Search } from 'lucide-react';
+import { useOrderSystem } from '../context/OrderContext';
 
-export const StaffScanner = () => {
-  const { orders, fulfillOrder } = useOrder();
+export const CounterFulfillmentTerminal = () => {
+  const { orders, fulfillOrder } = useOrderSystem();
   const [scannedInput, setScannedInput] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isScanningActive, setIsScanningActive] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Find active orders pending payment collection
   const unfulfilledOrders = orders.filter((o) => o.status !== 'Fulfilled');
 
-  // Handle Scan / Manual Token Search
   const handleLookup = (tokenOrPayload) => {
     setSuccessMessage('');
     let queryToken = tokenOrPayload.trim();
 
-    // Try parsing as QR JSON payload
     try {
       if (queryToken.startsWith('{')) {
         const parsed = JSON.parse(queryToken);
@@ -31,10 +27,9 @@ export const StaffScanner = () => {
         }
       }
     } catch (e) {
-      // String token fallback
+      // String fallback
     }
 
-    // Lookup by Token Number (e.g. #042 or 042)
     const normalized = queryToken.startsWith('#') ? queryToken : `#${queryToken}`;
     const found = orders.find(
       (o) => o.tokenNumber.toLowerCase() === normalized.toLowerCase() || o.id === queryToken
@@ -43,11 +38,10 @@ export const StaffScanner = () => {
     if (found) {
       setSelectedOrder(found);
     } else {
-      alert(`No order found matching token: "${tokenOrPayload}"`);
+      alert(`No active order found for token: "${tokenOrPayload}"`);
     }
   };
 
-  // Complete Payment Collection & Handover (Step 3: Tap Done)
   const handleFulfillDone = () => {
     if (!selectedOrder) return;
     fulfillOrder(selectedOrder.id);
@@ -71,19 +65,20 @@ export const StaffScanner = () => {
             <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
               <QrCode className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white font-heading">Staff Counter Scanner</h2>
+            <h2 className="text-2xl font-extrabold text-white font-heading">
+              Step 3: Counter Fulfillment Terminal (Scan, Pay & Collect)
+            </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Step 3: Point camera at customer phone QR to popup item breakdown, collect cash, and tap Done.
+            Point camera at customer phone QR to popup item breakdown, collect cash, hand tray, and tap Done.
           </p>
         </div>
 
         <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit">
-          <Camera className="w-3.5 h-3.5" /> Counter Terminal Active
+          <Camera className="w-3.5 h-3.5" /> Terminal Ready
         </span>
       </div>
 
-      {/* Success Notification Alert */}
       {successMessage && (
         <div className="mb-6 p-4 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-sm font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top duration-300">
           <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
@@ -93,20 +88,16 @@ export const StaffScanner = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Left Column: Interactive QR Scanner & Camera Interface */}
+        {/* Camera Feed & Scanner Interface */}
         <div className="glass-panel p-6 border-slate-800 flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-bold text-white font-heading mb-3 flex items-center gap-2">
-              <Camera className="w-4 h-4 text-cyan-400" /> Canteen Camera Scanner Feed
+              <Camera className="w-4 h-4 text-cyan-400" /> Counter Camera Scanner Feed
             </h3>
 
-            {/* Simulated Live Camera Scanner Viewport */}
             <div className="relative h-64 bg-slate-950 rounded-2xl border-2 border-dashed border-cyan-500/40 overflow-hidden flex flex-col items-center justify-center p-4">
-              
-              {/* Animated Scan Line */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#06b6d4] animate-pulse" />
 
-              {/* Target Reticle Overlay */}
               <div className="w-40 h-40 border-2 border-cyan-400/80 rounded-2xl flex items-center justify-center relative">
                 <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
                 <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
@@ -121,10 +112,9 @@ export const StaffScanner = () => {
               </p>
             </div>
 
-            {/* Manual Token Quick Search Bar */}
             <div className="mt-5 space-y-2">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Or Enter Token Number / Scan Code
+                Or Enter Token Number / Scan Payload
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -147,7 +137,6 @@ export const StaffScanner = () => {
             </div>
           </div>
 
-          {/* Quick Select Tokens for Demo */}
           <div className="mt-6 pt-4 border-t border-slate-800">
             <p className="text-xs font-semibold text-slate-400 mb-2">Simulate Customer Phone Scan:</p>
             <div className="flex flex-wrap gap-2">
@@ -168,7 +157,7 @@ export const StaffScanner = () => {
           </div>
         </div>
 
-        {/* Right Column: Scanned Order Popup & Fulfillment Card */}
+        {/* Order Popup & Fulfillment Card */}
         <div className="glass-panel p-6 border-slate-800 flex flex-col justify-between">
           {selectedOrder ? (
             <div>
@@ -185,7 +174,6 @@ export const StaffScanner = () => {
                 </span>
               </div>
 
-              {/* Items Breakdown */}
               <div className="py-4 space-y-2">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Items to Deliver</p>
                 {selectedOrder.items.map((item, idx) => (
@@ -198,7 +186,6 @@ export const StaffScanner = () => {
                 ))}
               </div>
 
-              {/* Amount to Collect Highlight Box */}
               <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 my-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -214,7 +201,6 @@ export const StaffScanner = () => {
                 </span>
               </div>
 
-              {/* Step 3 Action: Hand Over Food Tray & Tap Done */}
               <button
                 onClick={handleFulfillDone}
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 mt-4"
@@ -237,3 +223,5 @@ export const StaffScanner = () => {
     </div>
   );
 };
+
+export default CounterFulfillmentTerminal;
